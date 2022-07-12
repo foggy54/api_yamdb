@@ -1,5 +1,7 @@
-from api.models import User, Title, Genre, Category, Comment, Review
 import csv
+import io
+
+from api.models import Category, Comment, Genre, Review, Title, User
 
 
 def run():
@@ -29,7 +31,7 @@ def run():
     for key in DIC:
         key.objects.all().delete()
         print(f'All existing records for table {key.__name__} were erased.')
-        with open(DIC[key]) as file:
+        with io.open((DIC[key]), encoding='utf-8') as file:
             reader = csv.reader(file)
             header = next(reader)
             data = []
