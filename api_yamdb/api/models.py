@@ -28,7 +28,7 @@ class Category(models.Model):
 
 
 class Genre(Category):
-    ...
+    genre = models.CharField('Genre', max_length=50)
 
 
 class Titles(models.Model):
