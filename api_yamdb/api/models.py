@@ -9,8 +9,8 @@ ROLES_CHOICES = [
 ]
 
 
-class Users(AbstractUser):
-    username = models.CharField('Username', max_length=50)
+class User(AbstractUser):
+    username = models.CharField('Username', max_length=50, unique=True)
     email = models.EmailField('Email', help_text='Specify your email.')
     role = models.CharField(
         'Roles', choices=ROLES_CHOICES, default='USER', max_length=14
@@ -27,11 +27,12 @@ class Category(models.Model):
     slug = models.CharField('Slug', max_length=50)
 
 
-class Genre(Category):
-    ...
+class Genre(models.Model):
+    name = models.CharField('Category', max_length=50)
+    slug = models.CharField('Slug', max_length=50)
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField('Title', max_length=100)
     year = models.IntegerField('Year of release')
     category = models.ForeignKey(
@@ -39,14 +40,14 @@ class Titles(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='titles',
+        related_name='titles_category',
     )
-    genre = models.ManyToManyField(Genre, blank=True, null=True)
+    genre = models.ManyToManyField(Genre, blank=True)
 
 
 class Review(models.Model):
-    title_id = models.ForeignKey(
-        Titles,
+    title = models.ForeignKey(
+        Title,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -54,7 +55,7 @@ class Review(models.Model):
     )
     text = models.TextField('Review', help_text='Write your review here.')
     author = models.ForeignKey(
-        Users, on_delete=models.CASCADE, related_name='reviews'
+        User, on_delete=models.CASCADE, related_name='reviews_authors'
     )
     score = models.IntegerField(
         'Rating', help_text='Set rating to the choosen title.'
@@ -62,12 +63,12 @@ class Review(models.Model):
     pub_date = models.DateTimeField('Date of publishing', auto_now_add=True)
 
 
-class Comments(models.Model):
-    review_id = models.ForeignKey(
+class Comment(models.Model):
+    review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments'
     )
     text = models.TextField('Comment', help_text='Write your comment here.')
     author = models.ForeignKey(
-        Users, on_delete=models.CASCADE, related_name='comments'
+        User, on_delete=models.CASCADE, related_name='comments_authors'
     )
     pub_date = models.DateTimeField('Date of publishing', auto_now_add=True)
