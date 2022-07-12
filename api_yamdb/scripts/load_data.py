@@ -32,10 +32,9 @@ def run():
         with open(DIC[key]) as file:
             reader = csv.reader(file)
             header = next(reader)
-            fieldnames = [name for name in header]
             data = []
             for row in reader:
-                temp_row = dict(zip(fieldnames, row))
+                temp_row = dict(zip(header, row))
                 row_fixed = get_fields(temp_row)
                 data.append(row_fixed)
 
