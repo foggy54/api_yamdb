@@ -20,6 +20,7 @@ class User(AbstractUser):
     )
     first_name = models.CharField('First name', max_length=50)
     last_name = models.CharField('Last name', max_length=50)
+    token = models.CharField(max_length=8, default=None, blank=True, null=True)
 
 
 class Category(models.Model):
