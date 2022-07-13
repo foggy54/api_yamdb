@@ -14,8 +14,9 @@ from .validators import NotFoundValidationError
 
 from .serializers import EmailRegistration, LoginUserSerializer, UserSerializer
 from .permissions import IsAdmin
+from .utilities import salted_hash
 
-TOKEN_LEN = 8
+CODE_LEN = 8
 User = get_user_model()
 
 
@@ -35,16 +36,16 @@ class EmailRegistrationView(APIView):
             random.SystemRandom().choice(
                 string.ascii_uppercase + string.digits
             )
-            for _ in range(TOKEN_LEN)
+            for _ in range(CODE_LEN)
         )
-
+        
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
             username = serializer.validated_data.get('username')
             user, created = User.objects.get_or_create(
                 email=email, username=username
             )
-            user.access_code = access_code
+            user.access_code = salted_hash(access_code)
             user.save()
             if created:
                 title_email = 'YAMDB access code.'
@@ -56,13 +57,7 @@ class EmailRegistrationView(APIView):
                 f'get the access to the site via the link /api/v1/auth/token/'
             )
             send_mail(
-                title_email,
-                text,
-                from_email,
-                [
-                    email,
-                ],
-                fail_silently=False,
+                title_email, text, from_email, [email], fail_silently=False
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -78,7 +73,7 @@ class RetrieveAccessToken(APIView):
             user = User.objects.filter(username=data['username']).first()
             if user == None:
                 raise NotFoundValidationError({'detail': 'User not found'})
-            check_access_code = user.access_code == data['confirmation_code']
+            check_access_code = user.access_code == salted_hash(data['confirmation_code'])
             if not check_access_code:
                 raise serializers.ValidationError(
                     {'detail': 'Incorrect username or access_code'}
