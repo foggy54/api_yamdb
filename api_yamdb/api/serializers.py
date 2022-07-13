@@ -17,7 +17,7 @@ class EmailRegistration(serializers.Serializer):
 
 class LoginUserSerializer(serializers.Serializer):
     username = serializers.CharField()
-    access_code = serializers.CharField(write_only=True)
+    confirmation_code = serializers.CharField(write_only=True)
     
     
         

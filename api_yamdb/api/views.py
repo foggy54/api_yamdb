@@ -78,7 +78,7 @@ class RetrieveAccessToken(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         user = User.objects.get(username=data['username'])
-        check_access_code = user.access_code == data['access_code']
+        check_access_code = user.access_code == data['confirmation_code']
 
         if not check_access_code:
             raise serializers.ValidationError(
