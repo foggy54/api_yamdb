@@ -13,19 +13,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .validators import NotFoundValidationError
 
 from .serializers import EmailRegistration, LoginUserSerializer, UserSerializer
+from .permissions import IsAdmin
 
 TOKEN_LEN = 8
 User = get_user_model()
 
 
-class UserSignUpViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAdmin,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-    def perform_create(self, serializer):
-        username = self.kwargs.get('username')
-        password = self.kwargs.get('password')
-        serializer.save(username=username, password=password)
 
 
 class EmailRegistrationView(APIView):

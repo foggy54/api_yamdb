@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.authtoken import views
 from rest_framework.routers import SimpleRouter
 from .views import (
-    UserSignUpViewSet,
+    UserViewSet,
     EmailRegistrationView,
     RetrieveAccessToken,
 )
@@ -13,7 +13,7 @@ from rest_framework_simplejwt.views import (
 
 
 router = SimpleRouter()  # не знаю, нужно ли это тут, но пока добавил
-# router.register('auth/signup', UserSignUpViewSet, basename='auth-signup')
+router.register('users', UserViewSet, basename='auth-users')
 #
 
 urlpatterns = [
