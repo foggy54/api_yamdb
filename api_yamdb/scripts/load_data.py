@@ -1,7 +1,7 @@
 import csv
 import io
 
-from api.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 def run():
