@@ -2,15 +2,16 @@ import random
 import string
 
 from django import views
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import EmailRegistration, UserSerializer
+from .serializers import EmailRegistration, LoginUserSerializer, UserSerializer
 
 TOKEN_LEN = 8
 User = get_user_model()
@@ -67,3 +68,25 @@ class EmailRegistrationView(APIView):
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RetrieveAccessToken(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = LoginUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        user = User.objects.get(username=data['username'])
+        check_access_code = user.access_code == data['access_code']
+
+        if not check_access_code:
+            raise serializers.ValidationError(
+                {'detail': 'Incorrect username or access_code'}
+            )
+
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {'access': str(refresh.access_token), 'refresh': str(refresh)},
+            status=status.HTTP_200_OK,
+        )
