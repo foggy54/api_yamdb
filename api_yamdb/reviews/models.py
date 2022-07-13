@@ -5,13 +5,15 @@ from django.contrib.auth.models import AbstractUser
 ROLES_CHOICES = [
     ('USER', 'USER'),
     ('MODERATOR', 'MODERATOR'),
-    ('ADMINISTRATOR', 'ADMINISTRATOR'),
+    ('ADMIN', 'ADMIN'),
 ]
 
 
 class User(AbstractUser):
     username = models.CharField('Username', max_length=50, unique=True)
-    email = models.EmailField('Email', help_text='Specify your email.')
+    email = models.EmailField(
+        'Email', max_length=100, help_text='Specify your email.', unique=True
+    )
     role = models.CharField(
         'Roles', choices=ROLES_CHOICES, default='USER', max_length=14
     )
@@ -20,7 +22,9 @@ class User(AbstractUser):
     )
     first_name = models.CharField('First name', max_length=50)
     last_name = models.CharField('Last name', max_length=50)
-    access_code = models.CharField(max_length=8, default=None, blank=True, null=True)
+    access_code = models.CharField(
+        max_length=8, default=None, blank=True, null=True
+    )
 
 
 class Category(models.Model):

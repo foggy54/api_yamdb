@@ -10,21 +10,19 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from .validators import NotFoundValidationError
 
 from .serializers import EmailRegistration, LoginUserSerializer, UserSerializer
+from .permissions import IsAdmin
 
 TOKEN_LEN = 8
 User = get_user_model()
 
 
-class UserSignUpViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAdmin,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-    def perform_create(self, serializer):
-        username = self.kwargs.get('username')
-        password = self.kwargs.get('password')
-        serializer.save(username=username, password=password)
 
 
 class EmailRegistrationView(APIView):
@@ -75,18 +73,19 @@ class RetrieveAccessToken(APIView):
 
     def post(self, request):
         serializer = LoginUserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-        user = User.objects.get(username=data['username'])
-        check_access_code = user.access_code == data['access_code']
+        if serializer.is_valid(raise_exception=True):
+            data = serializer.validated_data
+            user = User.objects.filter(username=data['username']).first()
+            if user == None:
+                raise NotFoundValidationError({'detail': 'User not found'})
+            check_access_code = user.access_code == data['confirmation_code']
+            if not check_access_code:
+                raise serializers.ValidationError(
+                    {'detail': 'Incorrect username or access_code'}
+                )
 
-        if not check_access_code:
-            raise serializers.ValidationError(
-                {'detail': 'Incorrect username or access_code'}
+            refresh = RefreshToken.for_user(user)
+            return Response(
+                {'access': str(refresh.access_token), 'refresh': str(refresh)},
+                status=status.HTTP_200_OK,
             )
-
-        refresh = RefreshToken.for_user(user)
-        return Response(
-            {'access': str(refresh.access_token), 'refresh': str(refresh)},
-            status=status.HTTP_200_OK,
-        )
