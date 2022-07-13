@@ -25,12 +25,12 @@ class User(AbstractUser):
 
 class Category(models.Model):
     name = models.CharField('Category', max_length=50)
-    slug = models.CharField('Slug', max_length=50)
+    slug = models.SlugField('Slug', max_length=50)
 
 
 class Genre(models.Model):
     name = models.CharField('Category', max_length=50)
-    slug = models.CharField('Slug', max_length=50)
+    slug = models.SlugField('Slug', max_length=50)
 
 
 class Title(models.Model):
