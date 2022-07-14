@@ -1,21 +1,25 @@
 import random
 import string
 
-from django import views
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers, status, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import serializers, status, viewsets, filters
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .validators import NotFoundValidationError
 
-from .serializers import EmailRegistration, LoginUserSerializer, UserSerializer
-from .permissions import IsAdmin
-from .utilities import salted_hash
-from django.contrib.auth.hashers import make_password, check_password
+from .permissions import IsAdmin, IsSelf
+from .serializers import (
+    EmailRegistration,
+    LoginUserSerializer,
+    UserSelfSerializer,
+    UserSerializer,
+)
+from .validators import NotFoundValidationError
 
 CODE_LEN = 8
 User = get_user_model()
@@ -25,6 +29,30 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmin,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+
+    @action(
+        detail=False, methods=['patch', 'get'], permission_classes=[IsSelf]
+    )
+    def me(self, request, pk=None):
+        if request.method == 'GET':
+            instance = self.request.user
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        if request.method == 'PATCH':
+            partial = False
+            instance = self.request.user
+            serializer = UserSelfSerializer(
+                instance, data=request.data, partial=partial
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class EmailRegistrationView(APIView):

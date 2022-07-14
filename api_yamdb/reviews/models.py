@@ -3,42 +3,54 @@ from django.contrib.auth.models import AbstractUser
 
 
 ROLES_CHOICES = [
-    ('USER', 'USER'),
-    ('MODERATOR', 'MODERATOR'),
-    ('ADMIN', 'ADMIN'),
+    ('user', 'user'),
+    ('moderator', 'moderator'),
+    ('admin', 'admin'),
 ]
+MAX_LENGTH_SHORT = 50
+MAX_LENGTH_MED = 150
+MAX_LENGTH_LONG = 254
 
 
 class User(AbstractUser):
-    username = models.CharField('Username', max_length=50, unique=True)
+    username = models.CharField(
+        'Username', max_length=MAX_LENGTH_MED, unique=True
+    )
     email = models.EmailField(
-        'Email', max_length=100, help_text='Specify your email.', unique=True
+        'Email',
+        max_length=MAX_LENGTH_LONG,
+        help_text='Specify your email.',
+        unique=True,
     )
     role = models.CharField(
-        'Roles', choices=ROLES_CHOICES, default='USER', max_length=14
+        'Roles', choices=ROLES_CHOICES, default='user', max_length=14
     )
     bio = models.TextField(
         'Biography', blank=True, null=True, help_text='Short bio here.'
     )
-    first_name = models.CharField('First name', max_length=50)
-    last_name = models.CharField('Last name', max_length=50)
+    first_name = models.CharField(
+        'First name', max_length=MAX_LENGTH_MED, null=True
+    )
+    last_name = models.CharField(
+        'Last name', max_length=MAX_LENGTH_MED, null=True
+    )
     access_code = models.CharField(
         max_length=8, default=None, blank=True, null=True
     )
 
 
 class Category(models.Model):
-    name = models.CharField('Category', max_length=50)
-    slug = models.SlugField('Slug', max_length=50)
+    name = models.CharField('Category', max_length=MAX_LENGTH_SHORT)
+    slug = models.SlugField('Slug', max_length=MAX_LENGTH_SHORT)
 
 
 class Genre(models.Model):
-    name = models.CharField('Category', max_length=50)
-    slug = models.SlugField('Slug', max_length=50)
+    name = models.CharField('Category', max_length=MAX_LENGTH_SHORT)
+    slug = models.SlugField('Slug', max_length=MAX_LENGTH_SHORT)
 
 
 class Title(models.Model):
-    name = models.CharField('Title', max_length=100)
+    name = models.CharField('Title', max_length=MAX_LENGTH_MED)
     year = models.IntegerField('Year of release')
     category = models.ForeignKey(
         Category,
