@@ -1,26 +1,20 @@
 import random
 import string
 
-from django import views
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
-from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .permissions import IsAdmin, IsSelf
-from .serializers import (
-    EmailRegistration,
-    LoginUserSerializer,
-    UserSerializer,
-    UserSelfSerializer,
-)
+from .serializers import (EmailRegistration, LoginUserSerializer,
+                          UserSelfSerializer, UserSerializer)
 from .validators import NotFoundValidationError
 
 CODE_LEN = 8
@@ -42,7 +36,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
         if request.method == 'PATCH':
-            partial = True
+            partial = False
             instance = self.request.user
             serializer = UserSelfSerializer(
                 instance, data=request.data, partial=partial

@@ -9,7 +9,6 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        required=True,
         max_length=MAX_LENGTH_MED,
         validators=[
             UniqueValidator(queryset=User.objects.all()),
@@ -35,7 +34,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserSelfSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        required=True,
         max_length=MAX_LENGTH_MED,
         validators=[
             UniqueValidator(
@@ -61,10 +59,6 @@ class UserSelfSerializer(serializers.ModelSerializer):
             'email',
             'bio',
         )
-        extra_kwargs = {
-            'username': {'required': True, 'allow_blank': False},
-            'email': {'required': True, 'allow_blank': False},
-        }
         model = User
 
 
