@@ -1,10 +1,14 @@
 import csv
 import io
 
-from api.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
+from django.db.utils import IntegrityError
 
 
 def run():
+    # set this value to True, in case you need
+    # to clean db before injecting data:
+    ERASE_ALL = False
 
     DIC = {
         User: 'static/data/users.csv',
@@ -29,23 +33,35 @@ def run():
         return row
 
     for key in DIC:
-        key.objects.all().delete()
-        print(f'All existing records for table {key.__name__} were erased.')
+        if ERASE_ALL:
+            key.objects.all().delete()
+            print(
+                f'All existing records for table {key.__name__} were erased.'
+            )
+
         with io.open((DIC[key]), encoding='utf-8') as file:
             reader = csv.reader(file)
             header = next(reader)
             data = []
             for row in reader:
-                temp_row = dict(zip(header, row))
-                row_fixed = get_fields(temp_row)
-                data.append(row_fixed)
+                try:
+                    temp_row = dict(zip(header, row))
+                    row_fixed = get_fields(temp_row)
+                    data.append(row_fixed)
+                except Exception as e:
+                    print(f'Failed with error: {e}')
 
             successful = 0
+            failed = 0
             for row in data:
-                _, s = key.objects.get_or_create(**row)
-                if s:
-                    successful += 1
+                try:
+                    _, s = key.objects.get_or_create(**row)
+                    if s:
+                        successful += 1
+                except IntegrityError as e:
+                    print(f'Failed with error: {e}')
+                    failed += 1
 
             print(
-                f'Successfully created ojects type {key.__name__}: {successful}'
+                f'Successfully created ojects type {key.__name__}: {successful}, failed: {failed}.'
             )

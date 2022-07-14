@@ -1,17 +1,83 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+from reviews.models import MAX_LENGTH_LONG, MAX_LENGTH_MED, Review
 
-from .models import User, Review
+from .validators import username_restriction
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=MAX_LENGTH_MED,
+        validators=[
+            UniqueValidator(queryset=User.objects.all()),
+            username_restriction,
+        ],
+    )
+    email = serializers.EmailField(
+        max_length=MAX_LENGTH_LONG,
+        validators=[UniqueValidator(queryset=User.objects.all())],
+    )
+
     class Meta:
-        fields = ('username', 'password')
+        fields = (
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'role',
+            'bio',
+        )
         model = User
-        
-        
+
+
+class UserSelfSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=MAX_LENGTH_MED,
+        validators=[
+            UniqueValidator(
+                queryset=User.objects.filter(access_code__isnull=False)
+            ),
+            username_restriction,
+        ],
+    )
+    email = serializers.EmailField(
+        max_length=MAX_LENGTH_LONG,
+        validators=[
+            UniqueValidator(
+                queryset=User.objects.filter(access_code__isnull=False)
+            )
+        ],
+    )
+
+    class Meta:
+        fields = (
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'bio',
+        )
+        model = User
+
+
 class EmailRegistration(serializers.Serializer):
-    email = serializers.EmailField()
-    username = serializers.CharField(max_length=50)
+    email = serializers.EmailField(
+        max_length=MAX_LENGTH_LONG,
+    )
+    username = serializers.CharField(
+        max_length=MAX_LENGTH_MED,
+        validators=[
+            username_restriction,
+        ],
+    )
+
+
+class LoginUserSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField(write_only=True)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -31,16 +97,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
     class Meta:
-        fields = (
-            'id',
-            'text',
-            'author',
-            'score',
-            'pub_date'
-        )
-        read_only_fields = (
-            'id',
-            'pub_date',
-            'author'
-        )
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        read_only_fields = ('id', 'pub_date', 'author')
         model = Review

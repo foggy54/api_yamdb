@@ -1,29 +1,60 @@
-import random
+import secrets
 import string
 
-from django import views
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password, make_password
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets, permissions
+from rest_framework import filters, permissions, serializers, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.core.mail import send_mail
+from rest_framework_simplejwt.tokens import RefreshToken
+from reviews.models import Title
 
-from .models import User, Title
-from .permissions import IsAuthorModeratorAdminOrReadOnly
-from .serializers import EmailRegistration, UserSerializer, ReviewSerializer
+from .permissions import IsAdmin, IsAuthorModeratorAdminOrReadOnly, IsSelf
+from .serializers import (
+    EmailRegistration,
+    LoginUserSerializer,
+    ReviewSerializer,
+    UserSelfSerializer,
+    UserSerializer,
+)
+from .validators import NotFoundValidationError
 
-TOKEN_LEN = 8
+CODE_LEN = 20
+User = get_user_model()
 
 
-class UserSignUpViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAdmin,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
 
-    def perform_create(self, serializer):
-        username = self.kwargs.get('username')
-        password = self.kwargs.get('password')
-        serializer.save(username=username, password=password)
+    @action(
+        detail=False, methods=['patch', 'get'], permission_classes=[IsSelf]
+    )
+    def me(self, request, pk=None):
+        if request.method == 'GET':
+            instance = self.request.user
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        if request.method == 'PATCH':
+            partial = False
+            instance = self.request.user
+            serializer = UserSelfSerializer(
+                instance, data=request.data, partial=partial
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class EmailRegistrationView(APIView):
@@ -32,39 +63,70 @@ class EmailRegistrationView(APIView):
     def post(self, request, format=None):
         serializer = EmailRegistration(data=request.data)
 
-        token = ''.join(
-            random.SystemRandom().choice(
-                string.ascii_uppercase + string.digits
+        access_code = ''.join(
+            secrets.choice(
+                string.ascii_letters + string.digits + string.punctuation
             )
-            for _ in range(TOKEN_LEN)
+            for _ in range(CODE_LEN)
         )
 
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
             username = serializer.validated_data.get('username')
+            user, created = User.objects.get_or_create(
+                email=email, username=username
+            )
+            user.access_code = make_password(
+                access_code, salt=None, hasher='default'
+            )
+            user.save()
+            if created:
+                title_email = 'YAMDB access code.'
+            else:
+                title_email = 'YAMDB access code has been renewed.'
+            from_email = 'admin@yamdb.com'
             text = (
-                f'Hello, please send your username: {username} and token {token} to \n'
-                f'/api/v1/auth/token/ in order to complete the registration process.'
+                f'Hello, please use your username: {username} and access code: {access_code} to \n'
+                f'get the access to the site via the link /api/v1/auth/token/'
             )
             send_mail(
-                'Registration attempt.',
-                text,
-                'from@example.com',  # Это поле "От кого"
-                [
-                    email,
-                ],  # Это поле "Кому" (можно указать список адресов)
-                fail_silently=False,  # Сообщать об ошибках («молчать ли об ошибках?»)
+                title_email, text, from_email, [email], fail_silently=False
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class RetrieveAccessToken(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = LoginUserSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            data = serializer.validated_data
+            user = User.objects.filter(username=data['username']).first()
+            if user == None:
+                raise NotFoundValidationError({'detail': 'User not found'})
+            check_access_code = check_password(
+                data['confirmation_code'], user.access_code
+            )
+            if not check_access_code:
+                raise serializers.ValidationError(
+                    {'detail': 'Incorrect username or access_code'}
+                )
+
+            refresh = RefreshToken.for_user(user)
+            return Response(
+                {'access': str(refresh.access_token)},
+                status=status.HTTP_200_OK,
+            )
+
+
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    # permission_classes = (
-    #     IsAuthorModeratorAdminOrReadOnly,
-    #     permissions.IsAuthenticatedOrReadOnly,
-    # )
+    permission_classes = (
+        IsAuthorModeratorAdminOrReadOnly,
+        permissions.IsAuthenticatedOrReadOnly,
+    )
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
