@@ -65,18 +65,10 @@ class UserSelfSerializer(serializers.ModelSerializer):
 class EmailRegistration(serializers.Serializer):
     email = serializers.EmailField(
         max_length=MAX_LENGTH_LONG,
-        validators=[
-            UniqueValidator(
-                queryset=User.objects.filter(access_code__isnull=False)
-            )
-        ],
     )
     username = serializers.CharField(
         max_length=MAX_LENGTH_MED,
         validators=[
-            UniqueValidator(
-                queryset=User.objects.filter(access_code__isnull=False)
-            ),
             username_restriction,
         ],
     )
