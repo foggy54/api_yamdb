@@ -3,28 +3,30 @@ import string
 
 from django import views
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
+from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .validators import NotFoundValidationError
 
+from .permissions import IsAdmin, IsUserOwner
 from .serializers import EmailRegistration, LoginUserSerializer, UserSerializer
-from .permissions import IsAdmin
-from .utilities import salted_hash
-from django.contrib.auth.hashers import make_password, check_password
+from .validators import NotFoundValidationError
 
 CODE_LEN = 8
 User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAdmin,)
+    permission_classes = (IsAdmin ,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    lookup_field = 'username'
+
 
 
 class EmailRegistrationView(APIView):

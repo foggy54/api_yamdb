@@ -12,7 +12,7 @@ def caseless_equal(left, right):
 
 class IsAdmin(BasePermission):
     """
-    Allows access only for admins.
+    Allows access only for admins to everything.
     """
 
     def has_permission(self, request, view):
@@ -20,3 +20,9 @@ class IsAdmin(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return caseless_equal(request.user.role, 'admin')   
+
+
+class IsUserOwner(BasePermission):
+    
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj  
