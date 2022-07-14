@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 ROLES_CHOICES = [
@@ -61,6 +62,12 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(Genre, blank=True)
 
+    class Meta:
+        ordering = ['year']
+    
+    def __str__(self):
+        return self.name
+
 
 class Review(models.Model):
     title = models.ForeignKey(
@@ -75,7 +82,9 @@ class Review(models.Model):
         User, on_delete=models.CASCADE, related_name='reviews_authors'
     )
     score = models.IntegerField(
-        'Rating', help_text='Set rating to the choosen title.'
+        'Rating',
+        help_text='Set rating to the choosen title.',
+        validators=[MaxValueValidator(10), MinValueValidator(1)],
     )
     pub_date = models.DateTimeField('Date of publishing', auto_now_add=True)
 
