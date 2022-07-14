@@ -1,4 +1,4 @@
-import random
+import secrets
 import string
 
 from django.contrib.auth import get_user_model
@@ -21,7 +21,7 @@ from .serializers import (
 )
 from .validators import NotFoundValidationError
 
-CODE_LEN = 12
+CODE_LEN = 20
 User = get_user_model()
 
 
@@ -62,7 +62,7 @@ class EmailRegistrationView(APIView):
         serializer = EmailRegistration(data=request.data)
 
         access_code = ''.join(
-            random.SystemRandom().choice(
+            secrets.choice(
                 string.ascii_letters + string.digits + string.punctuation
             )
             for _ in range(CODE_LEN)
