@@ -21,7 +21,7 @@ from .serializers import (
 )
 from .validators import NotFoundValidationError
 
-CODE_LEN = 8
+CODE_LEN = 12
 User = get_user_model()
 
 
@@ -63,7 +63,7 @@ class EmailRegistrationView(APIView):
 
         access_code = ''.join(
             random.SystemRandom().choice(
-                string.ascii_uppercase + string.digits
+                string.ascii_letters + string.digits + string.punctuation
             )
             for _ in range(CODE_LEN)
         )
@@ -114,6 +114,6 @@ class RetrieveAccessToken(APIView):
 
             refresh = RefreshToken.for_user(user)
             return Response(
-                {'access': str(refresh.access_token), 'refresh': str(refresh)},
+                {'access': str(refresh.access_token)},
                 status=status.HTTP_200_OK,
             )

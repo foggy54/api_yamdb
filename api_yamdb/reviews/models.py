@@ -30,10 +30,10 @@ class User(AbstractUser):
         'Biography', blank=True, null=True, help_text='Short bio here.'
     )
     first_name = models.CharField(
-        'First name', max_length=MAX_LENGTH_MED, null=True
+        'First name', max_length=MAX_LENGTH_MED, null=True, blank=True
     )
     last_name = models.CharField(
-        'Last name', max_length=MAX_LENGTH_MED, null=True
+        'Last name', max_length=MAX_LENGTH_MED, null=True, blank=True
     )
     access_code = models.CharField(
         max_length=8, default=None, blank=True, null=True
