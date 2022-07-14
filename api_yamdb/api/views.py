@@ -3,15 +3,15 @@ import string
 
 from django import views
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 
-from .models import User
-from .serializers import EmailRegistration, UserSerializer
-
+from .models import User, Title
+from .permissions import IsAuthorModeratorAdminOrReadOnly
+from .serializers import EmailRegistration, UserSerializer, ReviewSerializer
 
 TOKEN_LEN = 8
 
@@ -57,3 +57,19 @@ class EmailRegistrationView(APIView):
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    # permission_classes = (
+    #     IsAuthorModeratorAdminOrReadOnly,
+    #     permissions.IsAuthenticatedOrReadOnly,
+    # )
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
