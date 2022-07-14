@@ -15,6 +15,6 @@ urlpatterns = [
     path('', include(v1_router.urls)),
     path('auth/signup/', EmailRegistrationView.as_view()),
     path(
-        'auth/token/', RetrieveAccessToken.as_view(), name='token_obtain_pair'
+        'vauth/token/', RetrieveAccessToken.as_view(), name='token_obtain_pair'
     ),
 ]
