@@ -19,10 +19,24 @@ class IsAdmin(BasePermission):
         return caseless_equal(request.user.role, 'admin')
 
     def has_object_permission(self, request, view, obj):
-        return caseless_equal(request.user.role, 'admin')   
+        return caseless_equal(request.user.role, 'admin')
 
 
 class IsSelf(BasePermission):
-    
     def has_object_permission(self, request, view, obj):
-        return request.user == obj  
+        return request.user == obj
+
+
+class IsAuthorModeratorAdminOrReadOnly(BasePermission):
+    def has_permissions(self, request, view):
+        return request.method in SAFE_METHODS or request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.method in SAFE_METHODS
+            or request.method == 'POST'
+            and request.user.is_authenticated
+            or obj.author == request.user
+            or request.user.is_admin
+            or request.user.is_moderator
+        )

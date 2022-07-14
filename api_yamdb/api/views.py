@@ -5,17 +5,19 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers, status, viewsets, filters
+from rest_framework import filters, permissions, serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from reviews.models import Title
 
-from .permissions import IsAdmin, IsSelf
+from .permissions import IsAdmin, IsAuthorModeratorAdminOrReadOnly, IsSelf
 from .serializers import (
     EmailRegistration,
     LoginUserSerializer,
+    ReviewSerializer,
     UserSelfSerializer,
     UserSerializer,
 )
@@ -117,3 +119,19 @@ class RetrieveAccessToken(APIView):
                 {'access': str(refresh.access_token)},
                 status=status.HTTP_200_OK,
             )
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = (
+        IsAuthorModeratorAdminOrReadOnly,
+        permissions.IsAuthenticatedOrReadOnly,
+    )
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
