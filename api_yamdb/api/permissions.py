@@ -22,7 +22,7 @@ class IsAdmin(BasePermission):
         return caseless_equal(request.user.role, 'admin')   
 
 
-class IsUserOwner(BasePermission):
+class IsSelf(BasePermission):
     
     def has_object_permission(self, request, view, obj):
         return request.user == obj  

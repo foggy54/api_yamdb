@@ -13,7 +13,7 @@ from rest_framework_simplejwt.views import (
 
 
 router = SimpleRouter()  # не знаю, нужно ли это тут, но пока добавил
-# router.register('users', UserViewSet, basename='auth-users')
+router.register('users', UserViewSet, basename='auth-users')
 # router.register('users/<str:username>', UserViewSet)
 #
 
@@ -23,15 +23,15 @@ urlpatterns = [
     path(
         'auth/token/', RetrieveAccessToken.as_view(), name='token_obtain_pair'
     ),
-    path(
-        'users/',
-        UserViewSet.as_view({'get': 'list', 'post': 'create'}),
-        name='users',
-    ),
-    path(
-        'users/<username>/',
-        UserViewSet.as_view({'get': 'list', 'patch': 'partial_update'}),
-        name='users_patch',
-    ),
+    # path(
+    #     'users/',
+    #     UserViewSet.as_view({'get': 'list', 'post': 'create'}),
+    #     name='users',
+    # ),
+    # path(
+    #     'users/<username>/',
+    #     UserViewSet.as_view({'get': 'list', 'patch': 'partial_update'}),
+    #     name='users_patch',
+    # ),
     # path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
