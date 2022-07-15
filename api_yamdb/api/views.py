@@ -20,7 +20,8 @@ from .serializers import (
     LoginUserSerializer,
     ReviewSerializer,
     UserSelfSerializer,
-    UserSerializer, CommentsSerializer,
+    UserSerializer,
+    CommentsSerializer,
 )
 from .validators import NotFoundValidationError
 
@@ -35,6 +36,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    pagination_class = LimitOffsetPagination
 
     @action(
         detail=False, methods=['patch', 'get'], permission_classes=[IsSelf]
@@ -149,16 +151,16 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = get_object_or_404(
-            Review, id=self.kwargs.get('review_id'),
-            title__id=self.kwargs.get('title_id')
+            Review,
+            id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id'),
         )
         return review.comments.all()
 
     def perform_create(self, serializer):
         review = get_object_or_404(
-            Review, id=self.kwargs.get('review_id'),
-            title__id=self.kwargs.get('title_id')
+            Review,
+            id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id'),
         )
         serializer.save(author=self.request.user, review=review)
-
-
