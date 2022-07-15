@@ -4,6 +4,7 @@ import string
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, permissions, serializers, status, viewsets
 from rest_framework.decorators import action
@@ -12,16 +13,16 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Title, Review
+from reviews.models import Review, Title
 
 from .permissions import IsAdmin, IsAuthorModeratorAdminOrReadOnly, IsSelf
 from .serializers import (
+    CommentsSerializer,
     EmailRegistration,
     LoginUserSerializer,
     ReviewSerializer,
     UserSelfSerializer,
     UserSerializer,
-    CommentsSerializer,
 )
 from .validators import NotFoundValidationError
 
@@ -39,7 +40,9 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
     @action(
-        detail=False, methods=['patch', 'get'], permission_classes=[IsSelf]
+        detail=False,
+        methods=['patch', 'get'],
+        permission_classes=[IsSelf],
     )
     def me(self, request, pk=None):
         if request.method == 'GET':
@@ -76,6 +79,18 @@ class EmailRegistrationView(APIView):
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
             username = serializer.validated_data.get('username')
+            #check if username or email already used:
+            duplicate_email = User.objects.filter(Q(email=email)).filter(
+                ~Q(username=username)
+            )
+            duplicate_username = User.objects.filter(
+                Q(username=username)
+            ).filter(~Q(email=email))
+
+            if duplicate_email.first() or duplicate_username.first():
+                raise serializers.ValidationError(
+                    {'detail': 'Username or email is already taken.'}
+                )
             user, created = User.objects.get_or_create(
                 email=email, username=username
             )
@@ -95,7 +110,7 @@ class EmailRegistrationView(APIView):
             send_mail(
                 title_email, text, from_email, [email], fail_silently=False
             )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
