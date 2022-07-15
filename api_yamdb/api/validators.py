@@ -11,3 +11,14 @@ def username_restriction(username):
             'Not allowed to use "me" as username'
         )
     return username
+
+
+def role_restriction(role):
+    if role == 'user':
+        return role
+    else:
+        raise serializers.ValidationError(
+            'Incorrect role'
+        )
+    
+

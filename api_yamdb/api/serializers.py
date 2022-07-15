@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from reviews.models import MAX_LENGTH_LONG, MAX_LENGTH_MED, Review, Comment
 
-from .validators import username_restriction
+from .validators import username_restriction, role_restriction
 
 User = get_user_model()
 
@@ -42,6 +42,7 @@ class UserSelfSerializer(serializers.ModelSerializer):
             ),
             username_restriction,
         ],
+        required=False,
     )
     email = serializers.EmailField(
         max_length=MAX_LENGTH_LONG,
@@ -50,6 +51,11 @@ class UserSelfSerializer(serializers.ModelSerializer):
                 queryset=User.objects.filter(access_code__isnull=False)
             )
         ],
+        required=False,
+    )
+    role = serializers.CharField(
+        max_length=MAX_LENGTH_MED,
+        read_only=True,
     )
 
     class Meta:
@@ -59,6 +65,7 @@ class UserSelfSerializer(serializers.ModelSerializer):
             'last_name',
             'email',
             'bio',
+            'role',
         )
         model = User
 
@@ -104,11 +111,9 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentsSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username'
+        read_only=True, slug_field='username'
     )
 
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
-
