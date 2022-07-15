@@ -79,15 +79,19 @@ class EmailRegistrationView(APIView):
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
             username = serializer.validated_data.get('username')
-            #check if username or email already used:
-            duplicate_email = User.objects.filter(Q(email=email)).filter(
-                ~Q(username=username)
+            # check if username or email already used:
+            duplicate_email = (
+                User.objects.filter(Q(email=email))
+                .filter(~Q(username=username))
+                .exists()
             )
-            duplicate_username = User.objects.filter(
-                Q(username=username)
-            ).filter(~Q(email=email))
+            duplicate_username = (
+                User.objects.filter(Q(username=username))
+                .filter(~Q(email=email))
+                .exists()
+            )
 
-            if duplicate_email.first() or duplicate_username.first():
+            if duplicate_email or duplicate_username:
                 raise serializers.ValidationError(
                     {'detail': 'Username or email is already taken.'}
                 )
