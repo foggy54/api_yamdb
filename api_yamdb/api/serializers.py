@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from reviews.models import MAX_LENGTH_LONG, MAX_LENGTH_MED, Review
+from reviews.models import MAX_LENGTH_LONG, MAX_LENGTH_MED, Review, Comment
 
 from .validators import username_restriction
 
@@ -100,3 +100,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         read_only_fields = ('id', 'pub_date', 'author')
         model = Review
+
+
+class CommentsSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'pub_date')
+        model = Comment
+
