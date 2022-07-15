@@ -15,6 +15,10 @@ MAX_LENGTH_LONG = 254
 
 
 class User(AbstractUser):
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+
     username = models.CharField(
         'Username', max_length=MAX_LENGTH_MED, unique=True
     )
@@ -39,6 +43,18 @@ class User(AbstractUser):
     access_code = models.CharField(
         max_length=8, default=None, blank=True, null=True
     )
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN or self.is_staff
 
 
 class Category(models.Model):

@@ -7,11 +7,12 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, permissions, serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Title
+from reviews.models import Title, Review
 
 from .permissions import IsAdmin, IsAuthorModeratorAdminOrReadOnly, IsSelf
 from .serializers import (
@@ -19,7 +20,7 @@ from .serializers import (
     LoginUserSerializer,
     ReviewSerializer,
     UserSelfSerializer,
-    UserSerializer,
+    UserSerializer, CommentsSerializer,
 )
 from .validators import NotFoundValidationError
 
@@ -127,6 +128,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         IsAuthorModeratorAdminOrReadOnly,
         permissions.IsAuthenticatedOrReadOnly,
     )
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -135,3 +137,28 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentsSerializer
+    permission_classes = (
+        IsAuthorModeratorAdminOrReadOnly,
+        permissions.IsAuthenticatedOrReadOnly,
+    )
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review, id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id')
+        )
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review, id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id')
+        )
+        serializer.save(author=self.request.user, review=review)
+
+
