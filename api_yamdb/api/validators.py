@@ -1,8 +1,11 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.exceptions import (
+    APIException,
+)
 
 
-class NotFoundValidationError(serializers.ValidationError):
-    status_code = 404
+class NotFoundValidationError(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
 
 
 def username_restriction(username):
@@ -11,14 +14,3 @@ def username_restriction(username):
             'Not allowed to use "me" as username'
         )
     return username
-
-
-def role_restriction(role):
-    if role == 'user':
-        return role
-    else:
-        raise serializers.ValidationError(
-            'Incorrect role'
-        )
-    
-
