@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from reviews.models import MAX_LENGTH_LONG, MAX_LENGTH_MED, Review, Comment
+from reviews.models import MAX_LENGTH_LONG, MAX_LENGTH_MED, Comment, Review
 
-from .validators import username_restriction, role_restriction
+from .validators import role_restriction, username_restriction
 
 User = get_user_model()
 
@@ -42,7 +43,6 @@ class UserSelfSerializer(serializers.ModelSerializer):
             ),
             username_restriction,
         ],
-        required=False,
     )
     email = serializers.EmailField(
         max_length=MAX_LENGTH_LONG,
@@ -51,12 +51,9 @@ class UserSelfSerializer(serializers.ModelSerializer):
                 queryset=User.objects.filter(access_code__isnull=False)
             )
         ],
-        required=False,
+        required=True,
     )
-    role = serializers.CharField(
-        max_length=MAX_LENGTH_MED,
-        read_only=True,
-    )
+    role = serializers.CharField(max_length=MAX_LENGTH_MED, read_only=True)
 
     class Meta:
         fields = (
@@ -80,6 +77,29 @@ class EmailRegistration(serializers.Serializer):
             username_restriction,
         ],
     )
+
+    def validate(self, data):
+        email = data.get('email')
+        username = data.get('username')
+        duplicate_email = (
+            User.objects.filter(Q(email=email))
+            .filter(~Q(username=username))
+            .exists()
+        )
+        duplicate_username = (
+            User.objects.filter(Q(username=username))
+            .filter(~Q(email=email))
+            .exists()
+        )
+        if duplicate_email:
+            raise serializers.ValidationError(
+                {'detail': 'Email is already taken.'}
+            )
+        if duplicate_username:
+            raise serializers.ValidationError(
+                {'detail': 'Username is already taken.'}
+            )
+        return data
 
 
 class LoginUserSerializer(serializers.Serializer):

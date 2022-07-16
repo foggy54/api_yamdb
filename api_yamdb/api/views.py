@@ -3,7 +3,6 @@ import string
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
-from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, permissions, serializers, status, viewsets
@@ -24,6 +23,7 @@ from .serializers import (
     UserSelfSerializer,
     UserSerializer,
 )
+from .utilities import send_token_email
 from .validators import NotFoundValidationError
 
 CODE_LEN = 20
@@ -50,7 +50,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
         if request.method == 'PATCH':
-            partial = False
+            partial = True
             instance = self.request.user
             serializer = UserSelfSerializer(
                 instance, data=request.data, partial=partial
@@ -70,31 +70,13 @@ class EmailRegistrationView(APIView):
         serializer = EmailRegistration(data=request.data)
 
         access_code = ''.join(
-            secrets.choice(
-                string.ascii_letters + string.digits + string.punctuation
-            )
+            secrets.choice(string.ascii_letters + string.digits)
             for _ in range(CODE_LEN)
         )
 
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
             username = serializer.validated_data.get('username')
-            # check if username or email already used:
-            duplicate_email = (
-                User.objects.filter(Q(email=email))
-                .filter(~Q(username=username))
-                .exists()
-            )
-            duplicate_username = (
-                User.objects.filter(Q(username=username))
-                .filter(~Q(email=email))
-                .exists()
-            )
-
-            if duplicate_email or duplicate_username:
-                raise serializers.ValidationError(
-                    {'detail': 'Username or email is already taken.'}
-                )
             user, created = User.objects.get_or_create(
                 email=email, username=username
             )
@@ -102,18 +84,7 @@ class EmailRegistrationView(APIView):
                 access_code, salt=None, hasher='default'
             )
             user.save()
-            if created:
-                title_email = 'YAMDB access code.'
-            else:
-                title_email = 'YAMDB access code has been renewed.'
-            from_email = 'admin@yamdb.com'
-            text = (
-                f'Hello, please use your username: {username} and access code: {access_code} to \n'
-                f'get the access to the site via the link /api/v1/auth/token/'
-            )
-            send_mail(
-                title_email, text, from_email, [email], fail_silently=False
-            )
+            send_token_email(username, access_code, email, created)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
