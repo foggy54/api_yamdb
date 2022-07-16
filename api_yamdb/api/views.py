@@ -2,13 +2,12 @@ import secrets
 import string
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import check_password, make_password
-from django.db.models import Q
+from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, serializers, status, viewsets
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -27,7 +26,6 @@ from .serializers import (
     TitleSerializer
 )
 from .utilities import send_token_email
-from .validators import NotFoundValidationError
 
 CODE_LEN = 20
 User = get_user_model()
