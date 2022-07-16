@@ -136,7 +136,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         title_id = self.context.get('view').kwargs.get('title_id')
         if Review.objects.filter(author=user, title_id=title_id).exists():
             raise serializers.ValidationError(
-                'It is not allowed to create multiple reviews for same user'
+                {
+                    'detail': 'It is not allowed to create multiple reviews for same user'
+                }
             )
         return data
 
