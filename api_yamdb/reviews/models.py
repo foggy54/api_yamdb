@@ -59,17 +59,23 @@ class User(AbstractUser):
 
 class Category(models.Model):
     name = models.CharField('Category', max_length=MAX_LENGTH_SHORT)
-    slug = models.SlugField('Slug', max_length=MAX_LENGTH_SHORT)
+    slug = models.SlugField('Slug',
+                            max_length=MAX_LENGTH_SHORT)
 
 
 class Genre(models.Model):
-    name = models.CharField('Category', max_length=MAX_LENGTH_SHORT)
-    slug = models.SlugField('Slug', max_length=MAX_LENGTH_SHORT)
+    name = models.CharField('Genre', max_length=MAX_LENGTH_SHORT)
+    slug = models.SlugField('Slug',
+                            max_length=MAX_LENGTH_SHORT)
 
 
 class Title(models.Model):
     name = models.CharField('Title', max_length=MAX_LENGTH_MED)
     year = models.IntegerField('Year of release')
+    description = models.CharField('Description',
+                                   blank=True,
+                                   max_length=MAX_LENGTH_LONG)
+    rating = models.FloatField('Rating', default=0)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
