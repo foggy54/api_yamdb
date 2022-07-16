@@ -49,3 +49,9 @@ class IsAuthorModeratorAdminOrReadOnly(BasePermission):
             or request.user.is_admin
             or request.user.is_moderator
         )
+
+class IsAdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return request.user.is_admin or request.user.is_superuser
+        return request.method in SAFE_METHODS

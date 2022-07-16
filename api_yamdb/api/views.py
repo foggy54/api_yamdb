@@ -9,13 +9,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Review, Title
+from reviews.models import Review, Title, Genre, Category
 
-from .permissions import IsAdmin, IsAuthorModeratorAdminOrReadOnly, IsSelf
+from .permissions import IsAdmin, IsAuthorModeratorAdminOrReadOnly, IsSelf, IsAdminOrReadOnly
 from .serializers import (
     CommentsSerializer,
     EmailRegistration,
@@ -23,6 +23,9 @@ from .serializers import (
     ReviewSerializer,
     UserSelfSerializer,
     UserSerializer,
+    CategorySerializer,
+    GenreSerializer,
+    TitleSerializer
 )
 from .validators import NotFoundValidationError
 
@@ -183,3 +186,36 @@ class CommentViewSet(viewsets.ModelViewSet):
             title__id=self.kwargs.get('title_id'),
         )
         serializer.save(author=self.request.user, review=review)
+
+
+class GenreViewSet(viewsets.mixins.CreateModelMixin,
+                   viewsets.mixins.ListModelMixin,
+                   viewsets.mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
+    serializer_class = GenreSerializer
+    queryset = Genre.objects.all()
+    lookup_field = 'slug'
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    serializer_class = TitleSerializer
+    queryset = Title.objects.all()
+    pagination_class = LimitOffsetPagination
+    permission_classes = (AllowAny,)
+
+
+class CategoryViewSet(viewsets.mixins.CreateModelMixin,
+                      viewsets.mixins.ListModelMixin,
+                      viewsets.mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+    lookup_field = 'slug'
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)

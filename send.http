@@ -1,0 +1,26 @@
+DELETE http://127.0.0.1:8000/api/v1/genres/comedy
+Content-Type: application/json
+
+
+###
+
+
+GET http://127.0.0.1:8000/api/v1/categories/
+Content-Type: application/json
+
+
+###
+
+GET http://127.0.0.1:8000/api/v1/titles/
+Content-Type: application/json
+
+
+###
+
+DELETE http://127.0.0.1:8000/api/v1/categories/book/
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:8000/api/v1/groups/
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjU2NjI4MjQwLCJqdGkiOiJhZWJjMTFkNDAyOWQ0Y2U4ODExZmM1YzQ3ZDI2NjE4MCIsInVzZXJfaWQiOjF9.3j8ZQ93nRYEkOClMU82K4SVgIqX4yj9j_9TEhUpEuTU

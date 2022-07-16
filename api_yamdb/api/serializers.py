@@ -1,7 +1,10 @@
+from cgitb import lookup
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from reviews.models import MAX_LENGTH_LONG, MAX_LENGTH_MED, Review, Comment
+from reviews.models import (MAX_LENGTH_LONG, MAX_LENGTH_MED,
+                            Category, Review, Comment,
+                            Genre, Title)
 
 from .validators import username_restriction, role_restriction
 
@@ -117,3 +120,28 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(
+        validators=[UniqueValidator(queryset=Category.objects.all())])
+
+    class Meta:
+        fields = ('name', 'slug')
+        model = Category
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(
+        validators=[UniqueValidator(queryset=Genre.objects.all())])
+
+    class Meta:
+        fields = ('name', 'slug')
+        model = Genre    
+        
+
+class TitleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('id','name','year','rating','description','genre','category')
+        model = Title
