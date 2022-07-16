@@ -1,3 +1,5 @@
+import datetime as dt
+
 from cgitb import lookup
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -141,7 +143,26 @@ class GenreSerializer(serializers.ModelSerializer):
         
 
 class TitleSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
 
     class Meta:
         fields = ('id','name','year','rating','description','genre','category')
         model = Title
+
+    def create(self, validated_data):
+        category = validated_data.pop('category')
+        category_obj = Category.objects.get(name=category)
+        genres = validated_data.pop('genre')
+        genres_list_obj = [Genre.objects.get(name=genre) for genre in genres]
+        title, _ = Title.objects.get_or_create(**validated_data, genre=genres_list_obj, category=category_obj)
+        return title
+        
+
+    def validate_year(self, value):
+        year_now = dt.date.today().year
+        if year_now < value:
+            raise serializers.ValidationError('Проверьте год!')
+        return value 
