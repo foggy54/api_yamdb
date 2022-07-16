@@ -1,10 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from reviews.models import MAX_LENGTH_LONG, MAX_LENGTH_MED, Comment, Review
 
-from .validators import role_restriction, username_restriction
+from .validators import NotFoundValidationError, username_restriction
 
 User = get_user_model()
 
@@ -106,6 +107,19 @@ class LoginUserSerializer(serializers.Serializer):
     username = serializers.CharField()
     confirmation_code = serializers.CharField(write_only=True)
 
+    def validate(self, data):
+        user = User.objects.filter(username=data['username']).first()
+        if user == None:
+            raise NotFoundValidationError({'detail': 'User not found'})
+        check_access_code = check_password(
+            data['confirmation_code'], user.access_code
+        )
+        if not check_access_code:
+            raise serializers.ValidationError(
+                {'detail': 'Incorrect username or access_code'}
+            )
+        return data
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -119,7 +133,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         title_id = self.context.get('view').kwargs.get('title_id')
         if Review.objects.filter(author=user, title_id=title_id).exists():
             raise serializers.ValidationError(
-                'Отзыв создан. Можно создавать только один отзыв.'
+                'It is not allowed to create multiple reviews for same user'
             )
         return data
 

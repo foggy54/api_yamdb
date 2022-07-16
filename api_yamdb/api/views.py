@@ -66,7 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class EmailRegistrationView(APIView):
     permission_classes = (AllowAny,)
 
-    def post(self, request, format=None):
+    def post(self, request):
         serializer = EmailRegistration(data=request.data)
 
         access_code = ''.join(
@@ -96,17 +96,7 @@ class RetrieveAccessToken(APIView):
         serializer = LoginUserSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
-            user = User.objects.filter(username=data['username']).first()
-            if user == None:
-                raise NotFoundValidationError({'detail': 'User not found'})
-            check_access_code = check_password(
-                data['confirmation_code'], user.access_code
-            )
-            if not check_access_code:
-                raise serializers.ValidationError(
-                    {'detail': 'Incorrect username or access_code'}
-                )
-
+            user = User.objects.get(username=data['username'])
             refresh = RefreshToken.for_user(user)
             return Response(
                 {'access': str(refresh.access_token)},
