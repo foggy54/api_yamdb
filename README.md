@@ -73,7 +73,7 @@
 Клонируем репозиторий на локальную машину:
 
 ```
-git clone https://github.com/DenisSivko/api_yamdb.git
+git clone https://github.com/foggy54/api_yamdb.git
 ```
 
 Создаем виртуальное окружение:
@@ -87,7 +87,11 @@ python -m venv venv
 ```
 pip install -r requirements.txt
 ```
+После создайте в корневой директории файл с названием "```.env```" и поместите в него:
+```
+SECRET_KEY=любой_секретный_ключ_на_ваш_выбор
 
+```
 Применяем миграции:
 
 ```
