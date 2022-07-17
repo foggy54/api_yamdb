@@ -114,6 +114,7 @@ class Title(models.Model):
     def __str__(self):
         return self.name
 
+
 class Review(models.Model):
     title = models.ForeignKey(
         Title,
@@ -137,6 +138,12 @@ class Review(models.Model):
         ordering = ('-pub_date',)
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            )
+        ]
 
     def __str__(self):
         return Truncator(self.text).words(MAX_LEN_TEXT)
