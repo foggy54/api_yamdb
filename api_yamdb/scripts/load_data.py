@@ -5,6 +5,17 @@ from reviews.models import Category, Comment, Genre, Review, Title, User
 from django.db.utils import IntegrityError
 
 
+DIC = {
+    User: 'static/data/users.csv',
+    Category: 'static/data/category.csv',
+    Genre: 'static/data/genre.csv',
+    Title: 'static/data/titles.csv',
+    Review: 'static/data/review.csv',
+    Comment: 'static/data/comments.csv',
+    'title_genre': 'static/data/genre_title.csv',
+}
+
+
 def get_fields(row):
     if row.get('author'):
         row['author'] = User.objects.get(pk=row['author'])
@@ -19,20 +30,32 @@ def get_fields(row):
     return row
 
 
+def titlegenre():
+    with io.open(DIC.get('title_genre'), encoding='utf-8') as file:
+        reader = csv.reader(file)
+        genres_dict = {}
+        for row in reader:
+            try:
+                title = Title.objects.get(id=row[1])
+                if title in genres_dict:
+                    genres_dict[title].append(Genre.objects.get(id=row[2]))
+                else:
+                    genres_dict[title] = [Genre.objects.get(id=row[2])]
+            except KeyError as k:
+                print(f'Genres title key error: {k}')
+
+        for key, value in genres_dict.items():
+            try:
+                key.genre.set(value)
+                key.save()
+            except Exception as e:
+                print(f'Insertion error {e}')
+
+
 def run():
     # set this value to True, in case you need
     # to clean db before injecting data:
     ERASE_ALL = False
-
-    DIC = {
-        User: 'static/data/users.csv',
-        Category: 'static/data/category.csv',
-        Genre: 'static/data/genre.csv',
-        Title: 'static/data/titles.csv',
-        Review: 'static/data/review.csv',
-        Comment: 'static/data/comments.csv',
-        'title_genre': 'static/data/genre_title.csv',
-    }
 
     for key in DIC:
         if ERASE_ALL:
@@ -68,23 +91,4 @@ def run():
                 f'Successfully created ojects type {key.__name__}:'
                 f'{successful}, failed: {failed}.'
             )
-
-    with io.open(DIC.get('title_genre'), encoding='utf-8') as file:
-        reader = csv.reader(file)
-        genres_dict = {}
-        for row in reader:
-            try:
-                title = Title.objects.get(id=row[1])
-                if title in genres_dict:
-                    genres_dict[title].append(Genre.objects.get(id=row[2]))
-                else:
-                    genres_dict[title] = [Genre.objects.get(id=row[2])]
-            except KeyError as k:
-                print(f'Genres title key error: {k}')
-
-        for key, value in genres_dict.items():
-            try:
-                key.genre.set(value)
-                key.save()
-            except Exception as e:
-                print(f'Insertion error {e}')
+    titlegenre()
