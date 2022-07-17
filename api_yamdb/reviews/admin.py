@@ -51,4 +51,3 @@ class CommentAdmin(admin.ModelAdmin):
     search_fields = ('text',)
     list_filter = ('review', 'author')
     empty_value_display = EMPTY_VALUE
-

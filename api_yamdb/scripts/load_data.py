@@ -5,6 +5,20 @@ from reviews.models import Category, Comment, Genre, Review, Title, User
 from django.db.utils import IntegrityError
 
 
+def get_fields(row):
+    if row.get('author'):
+        row['author'] = User.objects.get(pk=row['author'])
+    if row.get('review_id'):
+        row['review'] = Review.objects.get(pk=row['review_id'])
+    if row.get('title_id'):
+        row['title'] = Title.objects.get(pk=row['title_id'])
+    if row.get('category'):
+        row['category'] = Category.objects.get(pk=row['category'])
+    if row.get('genre'):
+        row['genre'] = Genre.objects.get(pk=row['genre'])
+    return row
+
+
 def run():
     # set this value to True, in case you need
     # to clean db before injecting data:
@@ -19,19 +33,6 @@ def run():
         Comment: 'static/data/comments.csv',
         'title_genre': 'static/data/genre_title.csv',
     }
-
-    def get_fields(row):
-        if row.get('author'):
-            row['author'] = User.objects.get(pk=row['author'])
-        if row.get('review_id'):
-            row['review'] = Review.objects.get(pk=row['review_id'])
-        if row.get('title_id'):
-            row['title'] = Title.objects.get(pk=row['title_id'])
-        if row.get('category'):
-            row['category'] = Category.objects.get(pk=row['category'])
-        if row.get('genre'):
-            row['genre'] = Genre.objects.get(pk=row['genre'])
-        return row
 
     for key in DIC:
         if ERASE_ALL:
