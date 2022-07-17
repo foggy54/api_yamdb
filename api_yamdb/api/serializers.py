@@ -5,8 +5,15 @@ from django.contrib.auth.hashers import check_password
 from django.db.models import Avg, Q
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from reviews.models import (MAX_LENGTH_LONG, MAX_LENGTH_MED, Category, Comment,
-                            Genre, Review, Title)
+from reviews.models import (
+    MAX_LENGTH_LONG,
+    MAX_LENGTH_MED,
+    Category,
+    Comment,
+    Genre,
+    Review,
+    Title,
+)
 
 from .validators import NotFoundValidationError, username_restriction
 
@@ -112,7 +119,7 @@ class LoginUserSerializer(serializers.Serializer):
 
     def validate(self, data):
         user = User.objects.filter(username=data['username']).first()
-        if user == None:
+        if user is None:
             raise NotFoundValidationError({'detail': 'User not found'})
         check_access_code = check_password(
             data['confirmation_code'], user.access_code

@@ -12,22 +12,16 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Review, Title, Genre, Category
+from reviews.models import Category, Genre, Review, Title
 
-from .permissions import IsAdmin, IsAuthorModeratorAdminOrReadOnly, IsSelf, IsAdminOrReadOnly
-from .serializers import (
-    CommentsSerializer,
-    EmailRegistration,
-    LoginUserSerializer,
-    ReviewSerializer,
-    UserSelfSerializer,
-    UserSerializer,
-    CategorySerializer,
-    GenreSerializer,
-    TitleSerializer,
-    TitleReadSerializer
-)
 from .filters import TitlesFilter
+from .permissions import (IsAdmin, IsAdminOrReadOnly,
+                          IsAuthorModeratorAdminOrReadOnly, IsSelf)
+from .serializers import (CategorySerializer, CommentsSerializer,
+                          EmailRegistration, GenreSerializer,
+                          LoginUserSerializer, ReviewSerializer,
+                          TitleReadSerializer, TitleSerializer,
+                          UserSelfSerializer, UserSerializer)
 from .utilities import send_token_email
 
 CODE_LEN = 20

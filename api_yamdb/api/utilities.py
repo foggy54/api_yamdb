@@ -13,5 +13,3 @@ def send_token_email(username, access_code, to_email, created):
         f'get the access to the site via the link /api/v1/auth/token/'
     )
     send_mail(title_email, text, from_email, [to_email], fail_silently=False)
-
-
