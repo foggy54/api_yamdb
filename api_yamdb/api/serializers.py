@@ -2,7 +2,7 @@ import datetime as dt
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
-from django.db.models import Q, Avg
+from django.db.models import Avg, Q
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from reviews.models import (MAX_LENGTH_LONG, MAX_LENGTH_MED, Category, Comment,
@@ -136,9 +136,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         title_id = self.context.get('view').kwargs.get('title_id')
         if Review.objects.filter(author=user, title_id=title_id).exists():
             raise serializers.ValidationError(
-                {
-                    'detail': 'It is not allowed to create multiple reviews for same user'
-                }
+                {'detail': 'Not allowed to create multiple reviews.'}
             )
         return data
 
@@ -178,18 +176,30 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
+class TaggedObjectRelatedField(serializers.SlugRelatedField):
+    def to_representation(self, value):
+        if isinstance(value, Genre):
+            serializer = GenreSerializer(value)
+        elif isinstance(value, Category):
+            serializer = CategorySerializer(value)
+        else:
+            raise Exception('Unexpected type of tagged object')
+
+        return serializer.data
+
+
 class TitleSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    category = serializers.SlugRelatedField(
+    category = TaggedObjectRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
-    genre = serializers.SlugRelatedField(
+    genre = TaggedObjectRelatedField(
         slug_field='slug', queryset=Genre.objects.all(), many=True
     )
 
     class Meta:
         model = Title
-        fields = ('__all__')
+        fields = '__all__'
 
     def create(self, validated_data):
         genres = validated_data.pop('genre', [])
@@ -209,11 +219,15 @@ class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     rating = serializers.SerializerMethodField()
 
-    def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
-        if rating:
-            return round(rating) if int(rating) == rating else float(f'{rating:.2f}')
-
     class Meta:
         fields = '__all__'
         model = Title
+
+    def get_rating(self, obj):
+        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
+        if rating:
+            return (
+                round(rating)
+                if int(rating) == rating
+                else float(f'{rating:.2f}')
+            )

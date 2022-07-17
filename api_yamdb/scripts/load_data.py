@@ -17,6 +17,7 @@ def run():
         Title: 'static/data/titles.csv',
         Review: 'static/data/review.csv',
         Comment: 'static/data/comments.csv',
+        'title_genre': 'static/data/genre_title.csv',
     }
 
     def get_fields(row):
@@ -67,7 +68,7 @@ def run():
                 f'{successful}, failed: {failed}.'
             )
 
-    with io.open('static/data/genre_title.csv', encoding='utf-8') as file:
+    with io.open(DIC.get('title_genre'), encoding='utf-8') as file:
         reader = csv.reader(file)
         genres_dict = {}
         for row in reader:
@@ -85,4 +86,4 @@ def run():
                 key.genre.set(value)
                 key.save()
             except Exception as e:
-                print(e)
+                print(f'Insertion error {e}')
