@@ -1,7 +1,6 @@
-from django.db.models import Avg
-from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 from django.utils.text import Truncator
 
 ROLES_CHOICES = [
@@ -16,10 +15,6 @@ MAX_LEN_TEXT = 3
 
 
 class User(AbstractUser):
-    USER = 'user'
-    ADMIN = 'admin'
-    MODERATOR = 'moderator'
-
     username = models.CharField(
         'Username', max_length=MAX_LENGTH_MED, unique=True
     )
@@ -47,15 +42,15 @@ class User(AbstractUser):
 
     @property
     def is_user(self):
-        return self.role == self.USER
+        return self.role == 'user'
 
     @property
     def is_moderator(self):
-        return self.role == self.MODERATOR
+        return self.role == 'moderator'
 
     @property
     def is_admin(self):
-        return self.role == self.ADMIN
+        return self.role == 'admin'
 
     class Meta:
         ordering = ('username',)
@@ -65,8 +60,7 @@ class User(AbstractUser):
 
 class Category(models.Model):
     name = models.CharField('Category', max_length=MAX_LENGTH_SHORT)
-    slug = models.SlugField('Slug',
-                            max_length=MAX_LENGTH_SHORT)
+    slug = models.SlugField('Slug', max_length=MAX_LENGTH_SHORT)
 
     class Meta:
         ordering = ('name',)
@@ -79,8 +73,7 @@ class Category(models.Model):
 
 class Genre(models.Model):
     name = models.CharField('Genre', max_length=MAX_LENGTH_SHORT)
-    slug = models.SlugField('Slug',
-                            max_length=MAX_LENGTH_SHORT)
+    slug = models.SlugField('Slug', max_length=MAX_LENGTH_SHORT)
 
     class Meta:
         ordering = ('name',)
@@ -94,9 +87,9 @@ class Genre(models.Model):
 class Title(models.Model):
     name = models.CharField('Title', max_length=MAX_LENGTH_MED)
     year = models.IntegerField('Year of release')
-    description = models.CharField('Description',
-                                   blank=True,
-                                   max_length=MAX_LENGTH_LONG)
+    description = models.CharField(
+        'Description', blank=True, max_length=MAX_LENGTH_LONG
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -140,8 +133,7 @@ class Review(models.Model):
         verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
-                fields=['title', 'author'],
-                name='unique_review'
+                fields=['title', 'author'], name='unique_review'
             )
         ]
 
