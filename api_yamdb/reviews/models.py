@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -96,7 +97,6 @@ class Title(models.Model):
     description = models.CharField('Description',
                                    blank=True,
                                    max_length=MAX_LENGTH_LONG)
-    rating = models.FloatField('Rating', default=0)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -113,7 +113,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class Review(models.Model):
     title = models.ForeignKey(

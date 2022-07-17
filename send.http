@@ -20,11 +20,11 @@ POST http://127.0.0.1:8000/api/v1/titles/
 Content-Type: application/json
 
 {
-    "name": "Моцарт - Туfdgfdцклий марш",
-    "year": 2222,
+    "name": "Моцарт - Туfdgfgfdkhmkmkцклий марш",
+    "year": 2012,
     "description": "",
-    "genre": [],
-    "category": {"name": "Музыка"}
+    "genre": ["ballad", "western"],
+    "category": "movie"
 }
 
 

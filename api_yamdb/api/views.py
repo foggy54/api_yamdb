@@ -4,6 +4,7 @@ import string
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
@@ -23,8 +24,10 @@ from .serializers import (
     UserSerializer,
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer
+    TitleSerializer,
+    TitleReadSerializer
 )
+from .filters import TitlesFilter
 from .utilities import send_token_email
 
 CODE_LEN = 20
@@ -161,10 +164,18 @@ class GenreViewSet(viewsets.mixins.CreateModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    serializer_class = TitleSerializer
     queryset = Title.objects.all()
     pagination_class = LimitOffsetPagination
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TitlesFilter
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return TitleReadSerializer
+        return TitleSerializer
 
 
 class CategoryViewSet(viewsets.mixins.CreateModelMixin,
