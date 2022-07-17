@@ -2,7 +2,7 @@ import datetime as dt
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
-from django.db.models import Q
+from django.db.models import Q, Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from reviews.models import (MAX_LENGTH_LONG, MAX_LENGTH_MED, Category, Comment,
@@ -180,30 +180,21 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    rating = serializers.IntegerField(read_only=True)
-    category = CategorySerializer()
-    genre = GenreSerializer(many=True)
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Genre.objects.all(), many=True
+    )
 
     class Meta:
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category',
-        )
         model = Title
+        fields = ('__all__')
 
     def create(self, validated_data):
-        category = validated_data.pop('category')
-        category_obj = Category.objects.get(name=category)
-        genres = validated_data.pop('genre')
-        genres_list_obj = [Genre.objects.get(name=genre) for genre in genres]
-        title, _ = Title.objects.get_or_create(
-            **validated_data, genre=genres_list_obj, category=category_obj
-        )
+        genres = validated_data.pop('genre', [])
+        title = Title.objects.create(**validated_data)
+        title.genre.set(genres)
         return title
 
     def validate_year(self, value):
@@ -211,3 +202,18 @@ class TitleSerializer(serializers.ModelSerializer):
         if year_now < value:
             raise serializers.ValidationError({'detail': 'Year is invalid.'})
         return value
+
+
+class TitleReadSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer(read_only=True)
+    rating = serializers.SerializerMethodField()
+
+    def get_rating(self, obj):
+        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
+        if rating:
+            return round(rating) if int(rating) == rating else float(f'{rating:.2f}')
+
+    class Meta:
+        fields = '__all__'
+        model = Title
