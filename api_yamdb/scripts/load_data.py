@@ -63,5 +63,26 @@ def run():
                     failed += 1
 
             print(
-                f'Successfully created ojects type {key.__name__}: {successful}, failed: {failed}.'
+                f'Successfully created ojects type {key.__name__}:'
+                f'{successful}, failed: {failed}.'
             )
+
+    with io.open('static/data/genre_title.csv', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        genres_dict = {}
+        for row in reader:
+            try:
+                title = Title.objects.get(id=row[1])
+                if title in genres_dict:
+                    genres_dict[title].append(Genre.objects.get(id=row[2]))
+                else:
+                    genres_dict[title] = [Genre.objects.get(id=row[2])]
+            except KeyError as k:
+                print(f'Genres title key error: {k}')
+
+        for key, value in genres_dict.items():
+            try:
+                key.genre.set(value)
+                key.save()
+            except Exception as e:
+                print(e)
