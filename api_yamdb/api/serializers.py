@@ -134,6 +134,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username'
     )
 
+    class Meta:
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        read_only_fields = ('id', 'pub_date', 'author')
+        model = Review
+
     def validate(self, data):
         if self.context.get('request').method != 'POST':
             return data
@@ -144,11 +149,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                 {'detail': 'Not allowed to create multiple reviews.'}
             )
         return data
-
-    class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
-        read_only_fields = ('id', 'pub_date', 'author')
-        model = Review
 
 
 class CommentsSerializer(serializers.ModelSerializer):
