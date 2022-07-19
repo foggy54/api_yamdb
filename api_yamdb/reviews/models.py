@@ -3,11 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import Truncator
 
-ROLES_CHOICES = [
-    ('user', 'user'),
-    ('moderator', 'moderator'),
-    ('admin', 'admin'),
-]
+
 MAX_LENGTH_SHORT = 50
 MAX_LENGTH_MED = 150
 MAX_LENGTH_LONG = 254
@@ -15,6 +11,12 @@ MAX_LEN_TEXT = 3
 
 
 class User(AbstractUser):
+    ROLES_CHOICES = [
+        ('user', 'user'),
+        ('moderator', 'moderator'),
+        ('admin', 'admin'),
+    ]
+
     username = models.CharField(
         'Username', max_length=MAX_LENGTH_MED, unique=True
     )
@@ -29,12 +31,6 @@ class User(AbstractUser):
     )
     bio = models.TextField(
         'Biography', blank=True, null=True, help_text='Short bio here.'
-    )
-    first_name = models.CharField(
-        'First name', max_length=MAX_LENGTH_MED, null=True, blank=True
-    )
-    last_name = models.CharField(
-        'Last name', max_length=MAX_LENGTH_MED, null=True, blank=True
     )
     access_code = models.CharField(
         max_length=8, default=None, blank=True, null=True
