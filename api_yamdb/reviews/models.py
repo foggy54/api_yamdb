@@ -36,6 +36,11 @@ class User(AbstractUser):
         max_length=8, default=None, blank=True, null=True
     )
 
+    class Meta:
+        ordering = ('username',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
     @property
     def is_user(self):
         return self.role == 'user'
@@ -47,11 +52,6 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return self.role == 'admin'
-
-    class Meta:
-        ordering = ('username',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
 
 
 class Category(models.Model):
@@ -116,10 +116,9 @@ class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews_authors'
     )
-    score = models.IntegerField(
-        'Rating',
-        help_text='Set rating to the choosen title.',
-        validators=[MaxValueValidator(10), MinValueValidator(1)],
+    score = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name='Оценка'
     )
     pub_date = models.DateTimeField('Date of publishing', auto_now_add=True)
 
