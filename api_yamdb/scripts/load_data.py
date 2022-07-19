@@ -12,6 +12,9 @@ DIC = {
     Title: 'static/data/titles.csv',
     Review: 'static/data/review.csv',
     Comment: 'static/data/comments.csv',
+}
+
+DIC_TITLE = {
     'title_genre': 'static/data/genre_title.csv',
 }
 
@@ -30,9 +33,10 @@ def get_fields(row):
     return row
 
 
-def titlegenre():
-    with io.open(DIC.get('title_genre'), encoding='utf-8') as file:
+def title_genre():
+    with io.open(DIC_TITLE.get('title_genre'), encoding='utf-8') as file:
         reader = csv.reader(file)
+        next(reader)
         genres_dict = {}
         for row in reader:
             try:
@@ -41,21 +45,28 @@ def titlegenre():
                     genres_dict[title].append(Genre.objects.get(id=row[2]))
                 else:
                     genres_dict[title] = [Genre.objects.get(id=row[2])]
-            except KeyError as k:
+            except Exception as k:
                 print(f'Genres title key error: {k}')
-
+        success = 0
+        failure = 0
         for key, value in genres_dict.items():
             try:
                 key.genre.set(value)
                 key.save()
+                success += 1
             except Exception as e:
+                failure += 1
                 print(f'Insertion error {e}')
+        print(
+            f'Successfully inserted objects to title_genre: {success}, '
+            f'failed: {failure}.'
+        )
 
 
 def run():
     # set this value to True, in case you need
     # to clean db before injecting data:
-    ERASE_ALL = False
+    ERASE_ALL = True
 
     for key in DIC:
         if ERASE_ALL:
@@ -91,4 +102,4 @@ def run():
                 f'Successfully created ojects type {key.__name__}:'
                 f'{successful}, failed: {failed}.'
             )
-    titlegenre()
+    title_genre()

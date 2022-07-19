@@ -1,6 +1,5 @@
 import datetime as dt
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.db.models import Avg, Q
 from rest_framework import serializers
@@ -13,11 +12,10 @@ from reviews.models import (
     Genre,
     Review,
     Title,
+    User,
 )
 
 from .validators import NotFoundValidationError, username_restriction
-
-User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -235,6 +233,6 @@ class TitleReadSerializer(serializers.ModelSerializer):
         if rating:
             return (
                 round(rating)
-                if int(rating) == rating
+                if isinstance(rating, int)
                 else float(f'{rating:.2f}')
             )
