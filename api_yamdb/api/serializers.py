@@ -222,17 +222,25 @@ class TitleSerializer(serializers.ModelSerializer):
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
+    # rating = serializers.SerializerMethodField()
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'category',
+            'genre',
+            'rating',
+        )
         model = Title
 
-    def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
-        if rating:
-            return (
-                round(rating)
-                if isinstance(rating, int)
-                else float(f'{rating:.2f}')
-            )
+    # def get_rating(self, obj):
+    #     rating = obj.reviews.aggregate(Avg('score'))['score__avg']
+    #     if rating:
+    #         return (
+    #             round(rating)
+    #             if isinstance(rating, int)
+    #             else float(f'{rating:.2f}')
+    #         )

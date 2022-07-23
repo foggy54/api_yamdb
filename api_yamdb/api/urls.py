@@ -26,11 +26,13 @@ v1_router.register('genres', GenreViewSet, basename='genres')
 v1_router.register('categories', CategoryViewSet, basename='categories')
 v1_router.register('titles', TitleViewSet, basename='titles')
 
+auth = [
+    path('signup/', EmailRegistrationView.as_view()),
+    path('token/', RetrieveAccessToken.as_view(), name='token_obtain_pair'),
+]
+
 
 urlpatterns = [
     path('', include(v1_router.urls)),
-    path('auth/signup/', EmailRegistrationView.as_view()),
-    path(
-        'auth/token/', RetrieveAccessToken.as_view(), name='token_obtain_pair'
-    ),
+    path('auth/', include(auth)),
 ]

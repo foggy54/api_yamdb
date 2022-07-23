@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import Truncator
+from django.db.models import Avg
 
 
 MAX_LENGTH_SHORT = 50
@@ -40,6 +41,11 @@ class User(AbstractUser):
         ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'], name='unique_username_email'
+            ),
+        ]
 
     @property
     def is_user(self):
@@ -100,6 +106,16 @@ class Title(models.Model):
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
+    @property
+    def rating(self):
+        rating = self.reviews.aggregate(Avg('score'))['score__avg']
+        if rating:
+            return (
+                round(rating)
+                if isinstance(rating, int)
+                else float(f'{rating:.2f}')
+            )
+
     def __str__(self):
         return self.name
 
@@ -118,7 +134,7 @@ class Review(models.Model):
     )
     score = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name='Оценка'
+        verbose_name='Оценка',
     )
     pub_date = models.DateTimeField('Date of publishing', auto_now_add=True)
 

@@ -15,13 +15,23 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
 
 from .filters import TitlesFilter
-from .permissions import (IsAdmin, IsAdminOrReadOnly,
-                          IsAuthorModeratorAdminOrReadOnly, IsSelf)
-from .serializers import (CategorySerializer, CommentsSerializer,
-                          EmailRegistration, GenreSerializer,
-                          LoginUserSerializer, ReviewSerializer,
-                          TitleReadSerializer, TitleSerializer,
-                          UserSelfSerializer, UserSerializer)
+from .permissions import (
+    IsAdmin,
+    IsAdminOrReadOnly,
+    IsAuthorModeratorAdminOrReadOnly,
+)
+from .serializers import (
+    CategorySerializer,
+    CommentsSerializer,
+    EmailRegistration,
+    GenreSerializer,
+    LoginUserSerializer,
+    ReviewSerializer,
+    TitleReadSerializer,
+    TitleSerializer,
+    UserSelfSerializer,
+    UserSerializer,
+)
 from .utilities import send_token_email
 
 
@@ -37,18 +47,16 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['patch', 'get'],
-        permission_classes=[IsSelf],
+        permission_classes=[permissions.IsAuthenticated],
     )
     def me(self, request, pk=None):
+        user = self.request.user
         if request.method == 'GET':
-            instance = self.request.user
-            serializer = self.get_serializer(instance)
+            serializer = self.get_serializer(user)
             return Response(serializer.data)
-        if request.method == 'PATCH':
-            partial = True
-            instance = self.request.user
+        else:
             serializer = UserSelfSerializer(
-                instance, data=request.data, partial=partial
+                user, data=request.data, partial=True
             )
             if serializer.is_valid():
                 serializer.save()
